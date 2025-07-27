@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/gasto.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddGastoScreen extends StatefulWidget {
   final Function(Gasto) onAdd;
@@ -17,7 +18,7 @@ class _AddGastoScreenState extends State<AddGastoScreen> {
   String _categoria = 'Comida';
   DateTime _fecha = DateTime.now();
 
-  void _guardarGasto() {
+  void _guardarGasto() async {
     final descripcion = _descripcionController.text;
     final monto = double.tryParse(_montoController.text);
 
@@ -30,6 +31,7 @@ class _AddGastoScreenState extends State<AddGastoScreen> {
       );
       return;
     }
+
     final nuevoGasto = Gasto(
       id: const Uuid().v4(),
       descripcion: descripcion,
@@ -38,8 +40,28 @@ class _AddGastoScreenState extends State<AddGastoScreen> {
       fecha: _fecha,
     );
 
-    widget.onAdd(nuevoGasto);
-    Navigator.pop(context);
+    try {
+      await FirebaseFirestore.instance
+          .collection('gastos')
+          .doc(nuevoGasto.id)
+          .set({
+            'descripcion': nuevoGasto.descripcion,
+            'monto': nuevoGasto.monto,
+            'categoria': nuevoGasto.categoria,
+            'fecha': nuevoGasto.fecha.toIso8601String(),
+          });
+
+      widget.onAdd(nuevoGasto);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al guardar el gasto: $e'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _seleccionarFecha() async {
