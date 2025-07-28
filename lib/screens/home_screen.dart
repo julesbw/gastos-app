@@ -1,3 +1,6 @@
+// lib/screens/home_screen.dart
+// Pantalla principal que muestra los gastos del usuario
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/gasto.dart';
@@ -16,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Gastos'),
@@ -29,9 +33,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('gastos')
+            .where('userId', isEqualTo: user?.uid)
             .orderBy('fecha', descending: true)
             .snapshots(),
         builder: (context, snapshot) {

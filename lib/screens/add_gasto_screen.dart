@@ -1,7 +1,11 @@
+// lib/screens/add_gasto_screen.dart
+// Pantalla para agregar un nuevo gasto
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/gasto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddGastoScreen extends StatefulWidget {
   final Function(Gasto) onAdd;
@@ -41,6 +45,7 @@ class _AddGastoScreenState extends State<AddGastoScreen> {
     );
 
     try {
+      final user = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance
           .collection('gastos')
           .doc(nuevoGasto.id)
@@ -49,6 +54,7 @@ class _AddGastoScreenState extends State<AddGastoScreen> {
             'monto': nuevoGasto.monto,
             'categoria': nuevoGasto.categoria,
             'fecha': nuevoGasto.fecha.toIso8601String(),
+            'userId': user!.uid,
           });
 
       widget.onAdd(nuevoGasto);
